@@ -1,0 +1,84 @@
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
+from PIL import Image
+import os
+
+gray_dir = "/home/guest01/colorize/train/input_image"
+color_dir = "/home/guest01/colorize/train/gt_image"
+img_list = sorted(os.listdir(gray_dir))   
+output = 
+dataset = MyColorizationDataset(gray_dir, color_dir, img_list, img_size=512)
+
+
+NUM_EPOCHS  = 5      
+BATCH_SIZE  = 32
+LR          = 1e-4
+IMG_SIZE    = 512
+NUM_WORKERS = 4
+SEED        = 42
+PATIENCE    = 3
+
+# ---- 데이터셋 ----
+class ColorizationDataset(Dataset):
+    def __init__(self, root_dir, img_list, img_size=256):
+        self.root_dir = root_dir
+        self.img_list = img_list
+        self.transform = transforms.Compose([
+            transforms.Resize((img_size, img_size)),
+            transforms.ToTensor()
+        ])
+    def __len__(self):
+        return len(self.img_list)
+    def __getitem__(self, idx):
+        img_name = self.img_list[idx]
+        color = Image.open(os.path.join(self.root_dir, 'color', img_name)).convert('RGB')
+        gray = Image.open(os.path.join(self.root_dir, 'gray', img_name)).convert('L')
+        color = self.transform(color)
+        gray = self.transform(gray).repeat(3,1,1)  # 1ch → 3ch로 복제(UNet 입력용)
+        return gray, color
+
+# ---- Generator: UNet ----
+class UNetGenerator(nn.Module):
+    def __init__(self, in_ch=3, out_ch=3, nf=64):
+        super().__init__()
+        # 다운샘플링
+        self.enc1 = nn.Sequential(nn.Conv2d(in_ch, nf, 4, 2, 1), nn.LeakyReLU(0.2))
+        self.enc2 = nn.Sequential(nn.Conv2d(nf, nf*2, 4, 2, 1), nn.BatchNorm2d(nf*2), nn.LeakyReLU(0.2))
+        self.enc3 = nn.Sequential(nn.Conv2d(nf*2, nf*4, 4, 2, 1), nn.BatchNorm2d(nf*4), nn.LeakyReLU(0.2))
+        self.enc4 = nn.Sequential(nn.Conv2d(nf*4, nf*8, 4, 2, 1), nn.BatchNorm2d(nf*8), nn.LeakyReLU(0.2))
+        self.enc5 = nn.Sequential(nn.Conv2d(nf*8, nf*8, 4, 2, 1), nn.BatchNorm2d(nf*8), nn.LeakyReLU(0.2))
+        # 업샘플링
+        self.dec1 = nn.Sequential(nn.ConvTranspose2d(nf*8, nf*8, 4, 2, 1), nn.BatchNorm2d(nf*8), nn.ReLU())
+        self.dec2 = nn.Sequential(nn.ConvTranspose2d(nf*16, nf*4, 4, 2, 1), nn.BatchNorm2d(nf*4), nn.ReLU())
+        self.dec3 = nn.Sequential(nn.ConvTranspose2d(nf*8, nf*2, 4, 2, 1), nn.BatchNorm2d(nf*2), nn.ReLU())
+        self.dec4 = nn.Sequential(nn.ConvTranspose2d(nf*4, nf, 4, 2, 1), nn.BatchNorm2d(nf), nn.ReLU())
+        self.dec5 = nn.ConvTranspose2d(nf*2, out_ch, 4, 2, 1)
+        self.tanh = nn.Tanh()
+    def forward(self, x):
+        e1 = self.enc1(x)
+        e2 = self.enc2(e1)
+        e3 = self.enc3(e2)
+        e4 = self.enc4(e3)
+        e5 = self.enc5(e4)
+        d1 = self.dec1(e5)
+        d2 = self.dec2(torch.cat([d1, e4], 1))
+        d3 = self.dec3(torch.cat([d2, e3], 1))
+        d4 = self.dec4(torch.cat([d3, e2], 1))
+        d5 = self.dec5(torch.cat([d4, e1], 1))
+        return self.tanh(d5)
+
+# ---- Discriminator: PatchGAN ----
+class PatchDiscriminator(nn.Module):
+    def __init__(self, in_ch=6, nf=64):
+        super().__init__()
+        # 입력: (gray+color) concat → in_ch=6
+        self.main = nn.Sequential(
+            nn.Conv2d(in_ch, nf, 4, 2, 1), nn.LeakyReLU(0.2),
+            nn.Conv2d(nf, nf*2, 4, 2, 1), nn.BatchNorm2d(nf*2), nn.LeakyReLU(0.2),
+            nn.Conv2d(nf*2, nf*4, 4, 2, 1), nn.BatchNorm2d(nf*4), nn.LeakyReLU(0.2),
+            nn.Conv2d(nf*4, 1, 4, 1, 1)
+        )
+    def forward(self, x):
+        return self.main(x)
