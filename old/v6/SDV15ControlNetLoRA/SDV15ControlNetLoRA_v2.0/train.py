@@ -6,13 +6,13 @@ from torchvision import transforms
 from PIL import Image
 import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
+from tqdm.auto import tqdm 
 from accelerate import Accelerator
 # Corrected import for ControlNetModelForControlNet if needed for main(), but not for this specific fix directly
 from diffusers import ControlNetModel, StableDiffusionControlNetPipeline, UniPCMultistepScheduler, AutoencoderKL, UNet2DConditionModel, DDPMScheduler
 from peft import LoraConfig, get_peft_model, set_peft_model_state_dict
 from transformers import CLIPTokenizer, AutoTokenizer, CLIPTextModel, CLIPProcessor, CLIPModel, get_scheduler
-import cv2
+import cv2 
 from skimage import color
 import random
 import re
