@@ -33,27 +33,27 @@
 - PyTorch, diffusers, transformers, peft, accelerate  
 - open-clip-torch, lpips, pytorch-msssim, opencv-python, scikit-image, safetensors 등
 - 학습:
-  pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cu121
-  pip install --upgrade pip
-  pip install diffusers==0.27.2
-  pip install transformers==4.36.2
-  pip install accelerate==0.29.2
-  pip install peft==0.7.1
-  pip install xformers==0.0.25
-  pip install lpips
-  pip install torchmetrics
-  pip install scikit-image pandas matplotlib tqdm pillow opencv-python
-  pip install nltk
-  pip install tensorboard
-  pip install open_clip_torch==3.0.0
-  pip install pytorch-msssim
+  - pip install torch==2.2.1 torchvision==0.17.1 --index-url https://download.pytorch.org/whl/cu121
+  - pip install --upgrade pip
+  - pip install diffusers==0.27.2
+  - pip install transformers==4.36.2
+  - pip install accelerate==0.29.2
+  - pip install peft==0.7.1
+  - pip install xformers==0.0.25
+  - pip install lpips
+  - pip install torchmetrics
+  - pip install scikit-image pandas matplotlib tqdm pillow opencv-python
+  - pip install nltk
+  - pip install tensorboard
+  - pip install open_clip_torch==3.0.0
+  - pip install pytorch-msssim
 
 - 추론:
-  pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
-  pip install numpy==1.26.4
-  pip install diffusers==0.27.2
-  pip install transformers==4.36.2
-  pip install huggingface-hub==0.20.2
+  - pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
+  - pip install numpy==1.26.4
+  - pip install diffusers==0.27.2
+  - pip install transformers==4.36.2
+  - pip install huggingface-hub==0.20.2
 
 ---
 
