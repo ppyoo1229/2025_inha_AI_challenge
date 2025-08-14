@@ -1,4 +1,3 @@
-# 추론시 merge_adapter_weights 까먹지 마셈 동적파라미터 원본캡션
 import os
 import torch
 import torch.nn.functional as F
